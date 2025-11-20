@@ -1,0 +1,180 @@
+week8
+
+mavenjava_build->freestyle project->source code: git url->branches:*/Main
+build steps:invoke top level->MAVEN_HOME goals:clean and goals:install
+post build actions: archive the artifacts:**/* -> build other projects->Mavenjava_test
+
+mavenjava_test->freestyle project->build env:Delete the workspace before build starts
+build steps:copy artifacts from other project: projectname: mavenjava_build,artifacts to copy:**/*
+top-level: MAVEN_HOME,test. post build:archive the artifacts:**/*
+
+mavenweb_build->freestyle project->source code: git url->branches:*/Main
+build steps:invoke top level->MAVEN_HOME goals:clean and goals:install
+post build actions: archive the artifacts:**/* -> build other projects->Mavenweb_test
+
+mavenweb_test->freestyle project->build env:Delete the workspace before build starts
+build steps:copy artifacts from other project: projectname: mavenweb_build,artifacts to copy:**/*
+top-level: MAVEN_HOME,goals:test. post build:archive the artifacts:**/*,build other projects: mavenweb_deploy
+
+mavenweb_deploy->freestyle project->build env:Delete the workspace before build starts
+build steps:copy artifacts from other project: projectname: mavenweb_test,artifacts to copy:**/*
+post build: deploy war/ear:**/*.war,context path:Webpath,container:tomcat 9.x
+credentials:admin,1234 , tomcat url: https://localhost:8085/
+
+tomcat-user file code (web deploy tomcat)
+
+<role rolename="manager-gui"/>
+<role rolename="manager-script"/>
+<role rolename="admin-gui"/>
+<user username="admin" password="1234" roles="manager-gui,manager-script,admin-gui"/>
+
+to start bin/startup batch
+to see port conf/service
+
+
+
+week 9
+
+scripted->pipeline->trigger:poll scm:H/2 ****
+
+pipeline{
+    agent any
+    tools{
+        maven 'MAVEN_HOME'
+    }
+    stages{
+        stage('Checkout'){
+            steps{
+                cleanWs()
+                bat "git clone "
+            }
+        }
+        stage('Build'){
+            steps{
+                bat 'cd jenkins1 && mvn clean install'
+            }
+        }
+        stage('Test'){
+            steps{
+                bat 'cd jenkins1 && mvn test'
+            }
+        }
+        stage('Package'){
+            steps{
+                bat 'cd jenkins1 && mvn package'
+            }
+        }
+    }
+}
+
+week 10
+
+Download the latest Minikube executable using this command:
+curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-installer.exe
+
+Install Minikube by running the installer: .\minikube-installer.exe
+
+minikube start --driver=docker
+
+minikube status
+
+minikube kubectl -- get pods -A
+
+kubectl version --client
+
+minikube start
+
+kubectl create deployment mynginx --image=nginx
+
+kubectl get deployments
+
+kubectl expose deployment mynginx --type=NodePort --port=80 --target-port=80
+
+kubectl scale deployment mynginx --replicas=4
+
+kubectl get service mynginx
+
+kubectl port-forward svc/mynginx 8081:80
+
+kubectl delete deployment mynginx
+kubectl delete service mynginx
+
+nagios:
+docker pull jasonrivers/nagios:latest
+docker run --name nagiosdemo -p 8888:80 jasonrivers/nagios:latest
+Username: nagiosadmin
+Password: nagios
+
+week 11
+
+gitrepo->webhooks->url:abcd/github-webhook/
+
+ngrok config add-authtoken <urtoken>
+ngrok http 8085
+contnt type:application/json
+
+Jenkins dashboard->mavenjavabuild->configure->triggers:github hook
+
+email:
+
+app password->name and generate
+Jenkins dashboard->manage jenkins->manage plugins->email extension plugin
+manage jenkins->system->
+
+email notification section: 
+smtp server:smtp.gmail.com->smtp auth enable->user name:ur email
+password->16 digit->check use ssl -> smtp port:465 -> reply to address:ur email
+
+extended email notification:
+smtp server:smtp.gmail.com->smtp port:465 ->use sll enabled ->credentials:gmail and 16 digit
+content typy:text-> trigger:failure
+
+jenkins->mavenjava_build->configure->post built: 
+editable email notification:project reci: email->content type:text->trigger: failure
+
+
+week 12:
+
+aws academy->untitled->login->cource->modules->start lab->click on aws->ec2->
+launch instance->name->select ubuntu free->create new keypair and add in aws folder on desktop
+all all ssh,http,https->launch instance->connect->ssh client copy and paste in powershell
+
+sudo apt update
+sudo apt-get install docker.io
+sudo apt install git
+sudo apt install nano
+
+create index.html in aws folder and push into github
+
+in powershell:
+git clone <git cloned url>
+ls
+cd aws
+
+nano Dockerfile:
+
+FROM nginx:alpine
+COPY . /usr/share/nginx/html
+
+sudo docker build -t instancename .
+sudo docker run -d -p 80:80 instancename
+
+part 2: using maven web project
+aws academy->untitled->login->cource->modules->start lab->click on aws->ec2->
+launch instance->name->select ubuntu free->create new keypair and add in aws folder on desktop
+all all ssh,http,https->launch instance->connect->ssh client copy and paste in powershell
+sudo apt update
+sudo apt-get install docker.io
+sudo apt install git
+sudo apt install nano
+
+git clone giturl
+nano Dockerfile:
+FROM tomcat:9-jdk11
+COPY target/*.war /usr/local/tomcat/webapps
+
+sudo docker build -t instancename .
+sudo docker run -d -p 9090:8080 instancename
+
+security groups->custom tcp->9090->0000
+
