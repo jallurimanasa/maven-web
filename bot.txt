@@ -1,0 +1,429 @@
+Q3:
+
+git init
+ls
+git add .
+git commit -m "Maven project"
+git config --global user.name "Your Name"
+git config --global user.email "your.email@example.com"
+git config --list
+git remote add origin https://github.com/username/my-web-app.git
+git push -u origin master
+
+
+week 5
+
+Docker CLI Commands with redis
+
+docker pull redis
+docker run --name my-redis -d redis
+docker ps
+docker exec -it my-redis redis-cli
+docker stop my-redis
+docker start my-redis
+docker rm my-redis  
+docker rmi redis
+
+Working with Docker file
+
+FROM redis:latest
+CMD ["redis-server"]
+
+docker build -t redisnew  .
+docker run --name myredisnew -d redisnew
+docker ps
+docker stop myredisnew
+
+login into dockerhub
+
+docker login
+docker ps -a
+docker commit CONTAINER_ID yourusername/redis1 
+docker images
+docker push yourusername/redis1
+docker rm CONTAINER_ID  
+docker rmi yourusername/redis1
+docker ps -a
+docker pull yourusername/redis1
+docker run --name myredis -d yourusername/redis1
+docker exec -it myredis redis-cli
+SET name "Abcdef"
+GET name
+
+week 6
+
+Define and run multiple interdependent services
+
+docker-compose.yml
+
+version: "3.9"
+
+services:
+  web:
+    image: nginx:latest
+    ports:
+      - "8080:80"
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: demo
+      POSTGRES_PASSWORD: demo
+      POSTGRES_DB: demo_db
+
+docker compose up -d
+open http://localhost:8080
+
+
+
+Write and interpret docker-compose.yml files
+
+version: "3.9"
+services:
+  redis:
+    image: redis:alpine
+web:
+  image: nginx:latest
+  ports:
+    - "8080:80"
+  depends_on:
+    - redis
+
+docker compose up -d
+docker compose ps
+
+
+Networking and persistent storage
+
+version: "3.9"
+
+networks:
+  app-net:
+
+volumes:
+  db-data:
+
+services:
+  web:
+    image: nginx:latest
+    ports:
+      - "8080:80"
+    networks:
+      - app-net
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: demo
+      POSTGRES_PASSWORD: demo
+      POSTGRES_DB: demo_db
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - app-net
+
+docker compose up -d
+
+
+
+Create a simple Flask app in app.py:
+
+create app.py
+
+from flask import Flask
+app = Flask(__name__)
+@app.route("/")
+def home():
+    return "Hello from Flask running in Docker!"
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
+
+
+
+create dockerfile
+
+FROM python:3.10-slim
+WORKDIR /app
+COPY app.py /app/
+RUN pip install flask
+CMD ["python", "app.py"]
+
+
+
+create docker-compose.yml
+
+version: "3.9"
+
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: demo
+      POSTGRES_PASSWORD: demo
+      POSTGRES_DB: demo_db
+    volumes:
+      - db-data:/var/lib/postgresql/data
+  volumes:
+    db-data:
+  
+
+docker compose up --build
+visit http://localhost:5000
+
+
+week 7
+
+Multi-Module Maven Project
+
+Search for Maven → Maven Project → Click Next
+
+Select the option:
+✔ Create a simple project (skip archetype selection)
+Click Next
+
+Enter:
+
+Group ID: KMIT
+Artifact ID: MultiModule
+
+In Packaging, choose pom
+
+Enter:
+
+Name: Multimodule creation
+
+Description: Sample multimodule with parent child hierarchy
+
+Click Finish
+
+Now your parent project (packaging = pom) is created.
+
+✅ 2. Create Module 1 (Child Project 1 – JAR)
+
+Right-click MultiModule
+
+Select New → Maven Module
+
+Check: ✔ Create a simple project (skip archetype selection)
+
+Enter:
+
+Artifact ID: MultiModuleChild1
+
+Click Next → Finish
+
+Now child1 appears with its own pom.xml.
+
+✅ 3. Create Module 2 (Child Project 2 – Web Module / WAR)
+
+Right-click MultiModule
+
+Select New → Maven Module
+
+Enter:
+
+Artifact ID: MultiModuleChild2
+
+Click Next
+
+In filters, search:
+
+maven-archetype-webapp
+
+Click Next → Finish
+
+
+Linking Two Modules:
+
+Open pom.xml of child2
+
+Find the <dependencies> section
+
+Add:
+<dependency>
+    <groupId>KMIT</groupId>
+    <artifactId>MultimoduleChild1</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+</dependency>
+
+
+week8
+
+mavenjava_build->freestyle project->source code: git url->branches:*/Main
+build steps:invoke top level->MAVEN_HOME goals:clean and goals:install
+post build actions: archive the artifacts:**/* -> build other projects->Mavenjava_test
+
+mavenjava_test->freestyle project->build env:Delete the workspace before build starts
+build steps:copy artifacts from other project: projectname: mavenjava_build,artifacts to copy:**/*
+top-level: MAVEN_HOME,test. post build:archive the artifacts:**/*
+
+mavenweb_build->freestyle project->source code: git url->branches:*/Main
+build steps:invoke top level->MAVEN_HOME goals:clean and goals:install
+post build actions: archive the artifacts:**/* -> build other projects->Mavenweb_test
+
+mavenweb_test->freestyle project->build env:Delete the workspace before build starts
+build steps:copy artifacts from other project: projectname: mavenweb_build,artifacts to copy:**/*
+top-level: MAVEN_HOME,goals:test. post build:archive the artifacts:**/*,build other projects: mavenweb_deploy
+
+mavenweb_deploy->freestyle project->build env:Delete the workspace before build starts
+build steps:copy artifacts from other project: projectname: mavenweb_test,artifacts to copy:**/*
+post build: deploy war/ear:**/*.war,context path:Webpath,container:tomcat 9.x
+credentials:admin,1234 , tomcat url: https://localhost:8085/
+
+week 9
+
+scripted->pipeline->trigger:poll scm:H/2 ****
+
+pipeline{
+    agent any
+    tools{
+        maven 'MAVEN_HOME'
+    }
+    stages{
+        stage('Checkout'){
+            steps{
+                cleanWs()
+                bat "git clone "
+            }
+        }
+        stage('Build'){
+            steps{
+                bat 'cd jenkins1 && mvn clean install'
+            }
+        }
+        stage('Test'){
+            steps{
+                bat 'cd jenkins1 && mvn test'
+            }
+        }
+        stage('Package'){
+            steps{
+                bat 'cd jenkins1 && mvn package'
+            }
+        }
+    }
+}
+
+week 10
+
+Download the latest Minikube executable using this command:
+curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-installer.exe
+
+Install Minikube by running the installer: .\minikube-installer.exe
+
+minikube start --driver=docker
+
+minikube status
+
+minikube kubectl -- get pods -A
+
+kubectl version --client
+
+minikube start
+
+kubectl create deployment mynginx --image=nginx
+
+kubectl get deployments
+
+kubectl expose deployment mynginx --type=NodePort --port=80 --target-port=80
+
+kubectl scale deployment mynginx --replicas=4
+
+kubectl get service mynginx
+
+kubectl port-forward svc/mynginx 8081:80
+
+kubectl delete deployment mynginx
+kubectl delete service mynginx
+
+nagios:
+docker pull jasonrivers/nagios:latest
+docker run --name nagiosdemo -p 8888:80 jasonrivers/nagios:latest
+Username: nagiosadmin
+Password: nagios
+
+week 11
+
+gitrepo->webhooks->url:abcd/github-webhook/
+
+ngrok config add-authtoken <urtoken>
+ngrok http 8085
+contnt type:application/json
+
+Jenkins dashboard->mavenjavabuild->configure->triggers:github hook
+
+email:
+
+app password->name and generate
+Jenkins dashboard->manage jenkins->manage plugins->email extension plugin
+manage jenkins->system->
+
+email notification section: 
+smtp server:smtp.gmail.com->smtp auth enable->user name:ur email
+password->16 digit->check use ssl -> smtp port:465 -> reply to address:ur email
+
+extended email notification:
+smtp server:smtp.gmail.com->smtp port:465 ->use sll enabled ->credentials:gmail and 16 digit
+content typy:text-> trigger:failure
+
+jenkins->mavenjava_build->configure->post built: 
+editable email notification:project reci: email->content type:text->trigger: failure
+
+
+week 12:
+
+aws academy->untitled->login->cource->modules->start lab->click on aws->ec2->
+launch instance->name->select ubuntu free->create new keypair and add in aws folder on desktop
+all all ssh,http,https->launch instance->connect->ssh client copy and paste in powershell
+
+sudo apt update
+sudo apt-get install docker.io
+sudo apt install git
+sudo apt install nano
+
+create index.html in aws folder and push into github
+
+in powershell:
+git clone <git cloned url>
+ls
+cd aws
+
+nano Dockerfile:
+
+FROM nginx:alpine
+COPY . /usr/share/nginx/html
+
+sudo docker build -t instancename .
+sudo docker run -d -p 80:80 instancename
+
+part 2: using maven web project
+aws academy->untitled->login->cource->modules->start lab->click on aws->ec2->
+launch instance->name->select ubuntu free->create new keypair and add in aws folder on desktop
+all all ssh,http,https->launch instance->connect->ssh client copy and paste in powershell
+sudo apt update
+sudo apt-get install docker.io
+sudo apt install git
+sudo apt install nano
+
+git clone giturl
+nano Dockerfile:
+FROM tomcat:9-jdk11
+COPY target/*.war /usr/local/tomcat/webapps
+
+sudo docker build -t instancename .
+sudo docker run -d -p 9090:8080 instancename
+
+security groups->custom tcp->9090->0000
+
